@@ -6,7 +6,7 @@
 
 | 层 | 技术 |
 |---|---|
-| 前端 | React 18 + Vite + Tailwind CSS |
+| 前端 | React 19 + Vite + Tailwind CSS 4 + React Router 7 |
 | 后端 | Node.js + Express 5 + TypeScript |
 | ORM / 数据库 | Prisma + SQLite |
 | 认证 | JWT（双 token）+ bcrypt |
@@ -17,28 +17,46 @@
 .
 ├── server/          # 后端 API
 │   ├── prisma/      # 数据库 schema、迁移文件、SQLite 文件
+│   ├── scripts/     # 冒烟测试脚本（npm test）
 │   └── src/
 │       ├── index.ts        # 入口：启动 HTTP 服务
 │       ├── app.ts          # Express 应用：中间件 + 路由挂载
-│       ├── routes/         # 路由
-│       └── lib/            # 公共模块（如 prisma 客户端）
-└── client/          # 前端（后续步骤创建）
+│       ├── routes/         # 路由（auth / notes / health）
+│       ├── middlewares/    # 登录守卫
+│       ├── lib/            # 公共模块（prisma、jwt、校验工具）
+│       └── types/          # Express 类型扩展
+└── client/          # 前端（React + Vite + Tailwind）
+    └── src/
+        ├── api/            # API 客户端：token 管理 + 401 自动换发重试
+        ├── auth/           # 登录状态全局管理（Context）
+        ├── components/     # 笔记卡片、编辑弹窗、路由守卫
+        ├── pages/          # 登录/注册页、笔记主页
+        └── lib/            # 工具函数（时间格式化）
 ```
 
-## 快速开始（后端）
+## 快速开始
+
+后端（默认 <http://localhost:3001>）：
 
 ```bash
 cd server
 npm install
-npx prisma migrate dev   # 首次运行，生成 SQLite 数据库
-npm run dev              # 启动开发服务器，默认 http://localhost:3001
+cp .env.example .env   # 编辑 .env，填入随机生成的 JWT_SECRET
+npx prisma migrate dev # 首次运行，生成 SQLite 数据库
+npm run dev
 ```
 
-验证：浏览器打开 http://localhost:3001/health ，应返回 `{"status":"ok",...}`。
+前端（默认 <http://localhost:5173>，已配置代理转发 /api 到后端）：
 
-查看数据：`npm run db:studio` 会打开 Prisma Studio（可视化数据库客户端）。
+```bash
+cd client
+npm install
+npm run dev
+```
 
-跑测试：`npm test` 会按真实使用顺序把所有接口完整测一遍（需服务已启动）。
+浏览器打开 <http://localhost:5173> ，注册一个账号即可使用。
+
+跑测试：`cd server && npm test`（需后端已启动），27 项断言覆盖认证与笔记增删改查全链路。
 
 ## API 一览
 
@@ -62,6 +80,6 @@ npm run dev              # 启动开发服务器，默认 http://localhost:3001
 - [x] 第 1 步：后端骨架 + 数据库模型（User / Note / Tag）
 - [x] 第 2 步：注册 / 登录（bcrypt 密码哈希 + JWT 双 token 鉴权）
 - [x] 第 3 步：笔记 / 待办 CRUD API + 标签筛选 + 权限隔离
-- [ ] 第 4 步：React + Vite + Tailwind 前端
-- [ ] 第 5 步：前后端联调（登录态管理、受保护路由）
+- [x] 第 4 步：React 前端（登录/注册、笔记列表、筛选搜索、新建/编辑弹窗）
+- [x] 第 5 步：前后端联调（浏览器端到端测试 11 项全部通过）
 - [ ] 第 6 步（可选）：Docker 部署
