@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// 用户：通过邮箱 + 密码注册登录
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String // 只存 bcrypt 哈希，绝不存明文
+  name      String?
+  notes     Note[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// 笔记 / 待办共用一张表：done 为 true 时就是一条待办
+model Note {
+  id       Int     @id @default(autoincrement())
+  title    String
+  content  String?
+  done     Boolean @default(false)
+  pinned   Boolean @default(false)
+  author   User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId Int
+  tags     Tag[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId])
+}
+
+/// 标签：与笔记多对多，一篇笔记可打多个标签
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  notes Note[]
+}
