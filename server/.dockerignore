@@ -1,0 +1,6 @@
+# 构建镜像时不要把这些拷进去
+node_modules
+dist
+.env
+prisma/dev.db
+prisma/dev.db-journal

@@ -1,0 +1,33 @@
+name: todo-notes
+
+services:
+  # 后端 API 容器
+  server:
+    build:
+      context: ./server
+      args:
+        # 国内网络构建时在根目录 .env 里设 DOCKER_REGISTRY=docker.m.daocloud.io/library
+        REGISTRY: ${DOCKER_REGISTRY:-docker.io/library}
+    environment:
+      # 数据库放进 /app/data，这个目录挂载到下面的命名卷，
+      # 容器删了数据还在；不挂载的话每次重建容器笔记就清零了
+      DATABASE_URL: file:/app/data/dev.db
+      PORT: 3001
+      JWT_SECRET: ${JWT_SECRET:?请在根目录 .env 中设置 JWT_SECRET}
+    volumes:
+      - db_data:/app/data
+
+  # 前端容器：nginx 托管打包好的静态文件，并把 /api 转发给 server
+  client:
+    build:
+      context: ./client
+      args:
+        REGISTRY: ${DOCKER_REGISTRY:-docker.io/library}
+    ports:
+      - "8080:80" # 宿主机 8080 -> 容器 80，浏览器访问 http://localhost:8080
+    depends_on:
+      - server
+
+# 命名卷：Docker 管理的持久化磁盘，docker compose down 不会删除它
+volumes:
+  db_data:

@@ -58,6 +58,26 @@ npm run dev
 
 跑测试：`cd server && npm test`（需后端已启动），27 项断言覆盖认证与笔记增删改查全链路。
 
+## Docker 部署（可选）
+
+前提：本机装有 Docker Desktop（Windows/macOS）或 Docker Engine + Compose 插件。
+
+国内网络请在根目录创建 `.env`（参考 `.env.example`），设置 `JWT_SECRET` 和 `DOCKER_REGISTRY=docker.m.daocloud.io/library`。
+
+```bash
+docker compose up --build -d   # 构建镜像并启动，然后打开 http://localhost:8080
+docker compose down            # 停止并移除容器（数据保留在命名卷里，不丢）
+docker compose down -v         # 连数据卷一起删除（彻底清空）
+```
+
+容器架构：
+
+```
+浏览器 → client 容器（nginx：托管前端静态文件，/api 反向代理）
+              └→ server 容器（Node API，启动时自动执行数据库迁移）
+                     └→ db_data 命名卷（SQLite 文件，容器销毁数据仍在）
+```
+
 ## API 一览
 
 | 方法 | 路径 | 说明 | 需要登录 |
@@ -82,4 +102,4 @@ npm run dev
 - [x] 第 3 步：笔记 / 待办 CRUD API + 标签筛选 + 权限隔离
 - [x] 第 4 步：React 前端（登录/注册、笔记列表、筛选搜索、新建/编辑弹窗）
 - [x] 第 5 步：前后端联调（浏览器端到端测试 11 项全部通过）
-- [ ] 第 6 步（可选）：Docker 部署
+- [x] 第 6 步：Docker 部署（双容器 + 数据卷，`docker compose up` 一条命令启动）
